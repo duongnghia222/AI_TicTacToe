@@ -1,89 +1,93 @@
-
 const cellElements = document.querySelectorAll('[data-cell]');
 const board = document.getElementById('board');
 const o = 'circle';
 const x = 'x';
-let circleTurn;
+var youFirst = true; // you go first by default
+var ai = o;
+var you = x;
+var winBlocks = [];
 const win = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 const winningMessageText =  document.querySelector('[data-winning-message-text]');
 const winningMessageElement = document.getElementById('winningMessage');
 const restartButton = document.getElementById('restartButton');
-/* #################3  */
-// const cells = document.querySelectorAll('.cell');
-
 var origBoard;
-/* #################3  */
+
 restartButton.addEventListener('click', startGame);
+
+var decideTurn = document.getElementById('decideTurn');
+decideTurn.addEventListener('change', function(){
+    if(this.checked){
+        youFirst = false;
+        ai = x;
+        you = o;
+        startGame();
+        console.log('ai goes first');
+    }
+    else{
+        youFirst = true;
+        ai = o;
+        you = x;
+        startGame();
+    }
+});
 
 startGame();
 
-// function findAvailableSpot() {
-//     let available = [];
-//     cellElements.forEach(cell => {
-//         if (cell.classList.contains(x) || cell.classList.contains(o)){
-//             available.add()
-//         }
-//     })
-// }
 
 function startGame() {
+    setBoardHover(youFirst);
     origBoard = Array.from(Array(9).keys());
-    for (var i = 0; i < cellElements.length; i++) {
-		cellElements[i].innerText = '';
-    }
-    //console.log(typeof(cellElements[1]));
-//#######################33 
+    winBlocks = [];
     cellElements.forEach(cell => {
         cell.classList.remove(x);
         cell.classList.remove(o);
         cell.style.removeProperty('background-color');
-        cell.addEventListener('click', handleClick, {once:true})
+        cell.addEventListener('click', yourTurn, {once:true})
+        cell.innerText = '';
     })
-    circleTurn = true;
-    setBoardHover();
     winningMessageElement.classList.remove('show');
-}
-
-function handleClick(event) {
-    var square = event.target.id;
-    const current = circleTurn ? o : x;
-    console.log(`${current}'s turn`);
-    placeMark(square, current);
-    circleTurn = !circleTurn;
-    if(!checkWin(o) && !isDraw()){
-        var availSpots = emptySquares();
-        var random = random_item(availSpots);
-        placeMark(random, x);
-        circleTurn = !circleTurn;
+    if(!youFirst){
+        aiTurn();
     }
-    setBoardHover();
 }
 
-function placeMark(square, current){
+
+function yourTurn(event) {
+    var square = event.target.id;
+    placeMark(square, youFirst ? x : o);
+    if(!checkWin(you, false) && !isDraw()){
+        aiTurn();
+    }
+}
+
+function aiTurn() {
+    var availSpots = emptySquares();
+    var random = random_item(availSpots);
+    //placeMark(random, ai);
+    placeMark(bestSpot(), ai);
+}
+
+
+function placeMark(square, currentPlayer){
     if (typeof origBoard[square] == 'number') {
-		origBoard[square] = current;
-	    document.getElementById(square).innerText = current;
-        document.getElementById(square).classList.add(current); // for css only
-        document.getElementById(square).removeEventListener('click', handleClick, false);
+		origBoard[square] = currentPlayer;
+	    document.getElementById(square).innerText = currentPlayer;
+        document.getElementById(square).classList.add(currentPlayer); // for css only
+        document.getElementById(square).removeEventListener('click', yourTurn, false);
 	}
     else{
         console.log("invalid move");
     }
-
-    if (checkWin(current)){
-        endGame(false); // it is not a draw 
+    if (checkWin(currentPlayer)){
+        endGame(false, currentPlayer); // it is not a draw 
     } else if(isDraw()){
-        endGame(true); 
+        endGame(true, currentPlayer); 
     }
-    
 }
 
 
-function random_item(items)
-{
-  
-return items[Math.floor(Math.random()*items.length)];
-     
+function random_item(items){
+    return items[Math.floor(Math.random()*items.length)];    
 }
 
 
@@ -91,19 +95,18 @@ function emptySquares() {
 	return origBoard.filter(s => typeof s == 'number');
 }
 
-function bestSpot() {
-
-}
 
 
-
-function endGame(draw) {
+function endGame(draw, current) {
     if (draw) {
         winningMessageText.innerText = `Draw !!!`;
     }  else {
-        winningMessageText.innerText = `${circleTurn ? "You Win !!!" : "You Lose"}`;
+        winningMessageText.innerText = `${(current == you) ? "You Win !!!" : "You Lose"}`;
     }
     winningMessageElement.classList.add('show');
+    winBlocks.forEach(index =>{
+        document.getElementById(index).style.backgroundColor = "green";
+    })
 }
 
 function isDraw() {
@@ -113,37 +116,107 @@ function isDraw() {
 }
 
 
-
-
-function setBoardHover() {
+function setBoardHover(youFirst) {
     board.classList.remove(x);
     board.classList.remove(o);
-    if(circleTurn){
-        board.classList.add(o);
+    if(youFirst){
+        board.classList.add(x);
     }
     else{
-        board.classList.add(x);
+        board.classList.add(o);
     }
 }
 
-function checkWin(current) {
-    // return win.some(c => {
-    //     return c.every(index => {
-    //         return cellElements[index].classList.contains(current)
-    //     })
-    // })
-    let isWin = false;
-    win.forEach(c => {
+function checkWin(currentPlayer) {
+        win.forEach(c => {
             if (c.every(e =>{
-                return cellElements[e].classList.contains(current);
+                return cellElements[e].classList.contains(currentPlayer);
             })){
-                isWin = true;
                 c.forEach(index => {
-                    document.getElementById(index).style.backgroundColor = "green";
-                })
+                    winBlocks.push(index);
+                }) 
             }
             
-    })
+        })
+        return winBlocks.length;
+}
     
-    return isWin;
+
+function aiCheckWin(board, currentPlayer){
+        var arr = [];
+        for(let i = 0; i < board.length; i++){
+            if(board[i] == currentPlayer){
+                arr.push(i);
+            }
+        }
+        let aiWin = false;
+        win.forEach(c => {
+            if(c.every(e => {
+                return (arr.indexOf(e) > -1) 
+            })){
+                aiWin = true;
+            }
+        })
+        return aiWin;    
+}
+
+function bestSpot() {
+   return minimax(origBoard, ai, 0).index;
+}
+
+function minimax(newBoard, player, depth) {
+    var availSpots = emptySquares();
+    //base case:
+    if (aiCheckWin(newBoard, ai)){
+        return {score: (20 - depth)};
+    }
+    else if (aiCheckWin(newBoard, you)){
+        return {score: -(20 - depth)};
+    }
+    else if(availSpots.length == 0){
+        return {score: 0};
+    }
+    depth += 1;
+    //console.log(depth);
+    var moves = [];
+    for(let i = 0; i < availSpots.length; i++){
+        var move = {};
+        move.index = newBoard[availSpots[i]];
+        if(move.index == 6){
+            console.log(newBoard);
+        }
+        newBoard[availSpots[i]] = player;
+        if(player == ai) {
+            var res = minimax(newBoard, you, depth);
+            move.score = res.score;
+        }
+        else{
+            var res = minimax(newBoard, ai, depth);
+            move.score = res.score;
+        }
+        // backtracking
+        newBoard[availSpots[i]] = move.index;
+        moves.push(move);
+    }
+    var bestMove;
+    if(player == ai) {
+        var bestScore = -99999;
+        for(let i = 0; i < moves.length; i++){
+            if(moves[i].score > bestScore){
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    }
+    else{
+        var bestScore = 99999;
+        for(let i = 0; i < moves.length; i++){
+            if(moves[i].score < bestScore){
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    }
+    return moves[bestMove];
+
 }
