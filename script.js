@@ -13,7 +13,17 @@ const restartButton = document.getElementById('restartButton');
 var origBoard;
 
 restartButton.addEventListener('click', startGame);
-
+var aiMode = false; // noob player by default
+var decideMode = document.getElementById('decideMode');
+decideMode.addEventListener('change', function(){
+    if(this.checked){
+        aiMode = true;
+    console.log('ai mode');
+    }else{
+        aiMode = false;
+    }
+    startGame();
+});
 var decideTurn = document.getElementById('decideTurn');
 decideTurn.addEventListener('change', function(){
     if(this.checked){
@@ -61,10 +71,18 @@ function yourTurn(event) {
 }
 
 function aiTurn() {
-    var availSpots = emptySquares();
-    var random = random_item(availSpots);
+    var spot;
+    if(!aiMode){
+        var availSpots = emptySquares();
+        var random = random_item(availSpots);
+        spot = random;
+    }else {
+        spot = bestSpot();
+    }
+
+    
     //placeMark(random, ai);
-    placeMark(bestSpot(), ai);
+    placeMark(spot, ai);
 }
 
 
@@ -161,7 +179,12 @@ function aiCheckWin(board, currentPlayer){
 }
 
 function bestSpot() {
-   return minimax(origBoard, ai, 0).index;
+    if(emptySquares().length == 9 && !youFirst){//ai always chooses the corner for the 1st move
+        firstMove = [0,2,6,8];
+        var corner = firstMove[Math.floor(Math.random()*firstMove.length)];
+        return corner;
+    }
+    return minimax(origBoard, ai, 0).index;
 }
 
 function minimax(newBoard, player, depth) {
