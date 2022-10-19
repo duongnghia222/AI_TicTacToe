@@ -12,15 +12,45 @@ body {
     margin: 0;
 }
 
+.head {
+    display: flex;
+    box-sizing: border-box;
+}
+
+.head .imghtml {
+    margin-top: 0;
+    box-sizing: border-box;
+    padding: 20px;
+    width: 125px;
+    height: 125px;
+}
+
+.head h1 {
+    text-align: center;
+    margin-top: 35px;
+    margin-bottom: 0;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.head h4 {
+    margin-top: 0;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.hr{
+    border: 1px solid red;
+}
+
 
 .board {
     width: 100vw;
-    height: 100vh;
-    display: grid;
+    /* height: 70vh; */
+    display: grid;  
     justify-content: center;
     align-content: center;
-    justify-items: center;
-    align-items: center;
+    /* justify-items: center;
+    align-items: center; */
+    /* margin-top: -100px; */
     grid-template-columns: repeat(3, auto);
     position: relative;
 }
@@ -154,10 +184,9 @@ body {
 
 
 .panel {
-    width:  400px;
+    width:  200px;
     height: 100px;
     position: relative;
-    top : 10px;
 }
 
 .toggle {
