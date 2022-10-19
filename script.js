@@ -2,9 +2,9 @@ const cellElements = document.querySelectorAll('[data-cell]');
 const board = document.getElementById('board');
 const o = 'circle';
 const x = 'x';
-var youFirst = true; // you go first by default
-var ai = o;
-var you = x;
+var youFirst = false; // you go first by default
+var ai = x;
+var you = o;
 var winBlocks = [];
 const win = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 const winningMessageText =  document.querySelector('[data-winning-message-text]');
@@ -18,25 +18,27 @@ var decideMode = document.getElementById('decideMode');
 decideMode.addEventListener('change', function(){
     if(this.checked){
         aiMode = true;
+        document.getElementById("myMessage").innerText = "You are on the unbeatable mode, now you can only draw or lose";
     console.log('ai mode');
     }else{
         aiMode = false;
+        document.getElementById("myMessage").innerText = "Coward :))";
     }
     startGame();
 });
 var decideTurn = document.getElementById('decideTurn');
 decideTurn.addEventListener('change', function(){
     if(this.checked){
-        youFirst = false;
-        ai = x;
-        you = o;
-        startGame();
-        console.log('ai goes first');
-    }
-    else{
         youFirst = true;
         ai = o;
         you = x;
+        startGame();
+        console.log('you goes first');
+    }
+    else{
+        youFirst = false;
+        ai = x;
+        you = o;
         startGame();
     }
 });
